@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en" ng-app='myApp'>
+<head>
+  <meta charset="UTF-8">
+  <title>1955 API Redux</title>
+  <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/angularjs/1.2.26/angular.min.js"></script>
+  <script>
+
+    var myApp = angular.module('myApp', []);
+
+    //USER FACTORY
+    myApp.factory('userFactory', function($http){
+      var users =[];
+      var factory = {};
+
+      factory.index = function(callback) {
+        $http.get('/users').success(function(output){
+          users = output;
+          callback(users);
+        })
+      };
+
+      factory.create = function(info, callback){
+        $http.post('/users', info).success(function (output){
+          users.push(output);
+        })
+      }
+
+      factory.delete = function (user, callback){
+        console.log("TEST TEST", user);
+        $http.delete('/users/' + user._id).success(function (output){
+        console.log(output);
+        })
+        callback(users)
+      }
+
+      return factory
+    })//END OF USER FACTORY
+
+
+    //USER CONTROLLER
+    myApp.controller('usersController', function($scope, userFactory){
+      userFactory.index(function (data){
+          $scope.users = data;
+        })
+
+
+      $scope.create = function(){
+        userFactory.create($scope.newUser, function(){
+          userFactory.index(function(data){
+            $scope.users = data;
+          })
+        })
+        $scope.newUser = {};
+      }
+
+      $scope.delete = function(user) {
+        console.log("here in controller users", user);
+        userFactory.delete(user, function(){
+          userFactory.index(function (user){
+            $scope.users = user;
+          })
+        })
+      }
+
+
+    });//END OF USER CONTROLLER
+
+  </script>
+
+
+
+</head>
+<body ng-controller='usersController'>
+  <h1>1955 Dashboard</h1>
+  <hr>
+  <h6>Add People Who Were Born in 1955!</h6>
+  <input type="text" ng-model='newUser.name' placeholder='Name...'>
+  <input type="submit" ng-click='create()'>
+  <pre>{{newUser | json}}</pre>
+
+  <div>
+    <table border="1" style="width:100%">
+      <tr>
+        <td>Name</td>
+        <td>Action</td>
+      </tr>
+      <tr ng-repeat='user in users'>
+        <td>{{user.name}}</td>
+        <td> <button ng-click='delete(user)'>Delete User</button> </td>
+
+      </tr>
+    </table>
+    <pre>{{users | json}}</pre>
+  </div>
+</body>
+</html>
